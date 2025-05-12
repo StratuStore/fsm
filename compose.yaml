@@ -1,0 +1,10 @@
+services:
+  fsm:
+    build:
+      context: .
+      target: final
+    env_file:
+      - ./.env
+    ports:
+      - "$HTTP_PORT:$HTTP_PORT"
+
