@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/StratuStore/fsm/internal/libs/errors"
+	"github.com/StratuStore/fsm/internal/libs/ownerrors"
 )
 
 type Response[T any] struct {
