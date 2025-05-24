@@ -4,16 +4,17 @@ import (
 	"context"
 	"github.com/StratuStore/fsm/internal/fsm/service"
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/mbretter/go-mongodb/types"
 	"log/slog"
 )
 
 type Renamer interface {
-	Rename(ctx context.Context, id string, newName string) error
+	Rename(ctx context.Context, id types.ObjectId, newName string) error
 }
 
 type RenameRequest struct {
-	ID   string `json:"id" validate:"required"`
-	Name string `json:"name" validate:"required"`
+	ID   types.ObjectId `json:"id" validate:"required"`
+	Name string         `json:"name" validate:"required"`
 }
 
 func (s *Service) Rename(ctx owncontext.Context, data RenameRequest) error {

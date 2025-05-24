@@ -5,33 +5,57 @@ import (
 	"github.com/StratuStore/fsm/internal/fsm/core"
 	"github.com/StratuStore/fsm/internal/fsm/service"
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/mbretter/go-mongodb/types"
 	"log/slog"
 )
 
+const (
+	DefaultLimit     = 300
+	DefaultSortField = "name"
+	DefaultSortOrder = 1
+)
+
 type Getter interface {
-	GetByPath(ctx context.Context, path []string) (*core.Directory, error)
-	Get(ctx context.Context, id string) (*core.Directory, error)
-	CreateRoot(ctx context.Context, userID string) (*core.Directory, error)
+	Get(ctx context.Context, id types.ObjectId) (*core.Directory, error)
+	GetWithPagination(ctx context.Context, id types.ObjectId, offset, limit uint, sortByField string, sortOrder int) (*core.Directory, error)
+	GetRoot(ctx context.Context, userID string, offset, limit uint, sortByField string, sortOrder int) (*core.Directory, error)
 }
 
-type GetByPathRequest struct {
-	Path []string `query:"path" validate:"-"`
+type GetRequest struct {
+	ID          types.ObjectId `params:"id" validate:"-"`
+	Offset      uint           `query:"offset" validate:"-"`
+	Limit       uint           `query:"limit" validate:"-"`
+	SortByField string         `query:"sortByField" validate:"-"`
+	SortOrder   int            `query:"sortOrder" validate:"-"`
 }
 
-func (s *Service) GetByPath(ctx owncontext.Context, data GetByPathRequest) (*core.Directory, error) {
-	l := s.l.With(slog.String("op", "GetByPath"))
-	path := data.Path
+func (s *Service) Get(ctx owncontext.Context, data GetRequest) (*core.Directory, error) {
+	l := s.l.With(slog.String("op", "Get"))
 
-	if len(path) == 0 {
-		path = nil
+	if data.Limit == 0 {
+		data.Limit = DefaultLimit
+	}
+	if data.SortByField == "" {
+		data.SortByField = DefaultSortField
+	}
+	if data.SortOrder == 0 {
+		data.SortOrder = DefaultSortOrder
 	}
 
-	dir, err := s.s.GetByPath(ctx, path)
-	if err != nil {
-		if len(path) == 0 && isErrNotFound(err) {
-			return s.initUser(ctx, ctx.UserID())
+	if data.ID.IsZero() {
+		dir, err := s.s.GetRoot(ctx, ctx.UserID(), data.Offset, data.Limit, data.SortByField, data.SortOrder)
+		if isErrNotFound(err) {
+			dir, err = s.s.CreateRoot(ctx, ctx.UserID())
+		}
+		if err != nil {
+			return nil, service.NewDBError(l, err)
 		}
 
+		return dir, nil
+	}
+
+	dir, err := s.s.GetWithPagination(ctx, data.ID, data.Offset, data.Limit, data.SortByField, data.SortOrder)
+	if err != nil {
 		return nil, service.NewDBError(l, err)
 	}
 
@@ -42,15 +66,7 @@ func (s *Service) GetByPath(ctx owncontext.Context, data GetByPathRequest) (*cor
 	return dir, nil
 }
 
-type GetRequest struct {
-	ID string `params:"id" validate:"required"`
-}
-
-func (s *Service) Get(ctx owncontext.Context, data GetRequest) (*core.Directory, error) {
-	return s.getAndCheckUser(ctx, data.ID)
-}
-
-func (s *Service) getAndCheckUser(ctx owncontext.Context, id string) (*core.Directory, error) {
+func (s *Service) getAndCheckUser(ctx owncontext.Context, id types.ObjectId) (*core.Directory, error) {
 	l := s.l.With(slog.String("op", "getAndCheckUser"))
 
 	dir, err := s.s.Get(ctx, id)

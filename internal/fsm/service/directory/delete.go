@@ -6,16 +6,18 @@ import (
 	"github.com/StratuStore/fsm/internal/fsm/core"
 	"github.com/StratuStore/fsm/internal/fsm/service"
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/mbretter/go-mongodb/types"
 	"log/slog"
 	"slices"
 )
 
 type Deleter interface {
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id types.ObjectId) error
+	StupidDelete(ctx context.Context, id types.ObjectId) error
 }
 
 type DeleteRequest struct {
-	ID string `json:"id" validate:"required"`
+	ID types.ObjectId `json:"id" validate:"required"`
 }
 
 func (s *Service) Delete(ctx owncontext.Context, data DeleteRequest) error {
@@ -64,10 +66,10 @@ func (s *Service) deleteDir(ctx context.Context, dirs []core.Directory, files []
 
 	var errs error
 	for _, dir := range dirs {
-		errors.Join(errs, s.t.DeleteDir(dir.ID))
+		errors.Join(errs, s.s.StupidDelete(ctx, dir.ID))
 	}
 	for _, file := range files {
-		errors.Join(errs, s.t.DeleteFile(file.ID))
+		errors.Join(errs, s.c.Delete(ctx, string(file.ID)))
 	}
 	if errs != nil {
 		return service.NewDBError(l, errs)

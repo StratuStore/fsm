@@ -18,7 +18,7 @@ type Storage interface {
 type Service struct {
 	l *slog.Logger
 	s Storage
-	t service.Tasker
+	c service.Communicator
 }
 
 func isErrNotFound(err error) bool {

@@ -5,22 +5,24 @@ import (
 	"github.com/StratuStore/fsm/internal/fsm/core"
 	"github.com/StratuStore/fsm/internal/fsm/service"
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/mbretter/go-mongodb/types"
 	"log/slog"
 )
 
 type Creator interface {
-	Create(ctx context.Context, parentDir string, name string, userID string) (*core.Directory, error)
+	Create(ctx context.Context, parentDirID types.ObjectId, userID, name string) (*core.Directory, error)
+	CreateRoot(ctx context.Context, userID string) (*core.Directory, error)
 }
 
 type CreateRequest struct {
-	ParentDir string `json:"parentDir" validate:"required"`
-	Name      string `json:"name" validate:"required"`
+	ParentDirID types.ObjectId `json:"parentDirID" validate:"required"`
+	Name        string         `json:"name" validate:"required"`
 }
 
 func (s *Service) Create(ctx owncontext.Context, data CreateRequest) (*core.Directory, error) {
 	l := s.l.With(slog.String("op", "Create"))
 
-	dir, err := s.s.Create(ctx, data.ParentDir, data.Name, ctx.UserID())
+	dir, err := s.s.Create(ctx, data.ParentDirID, ctx.UserID(), data.Name)
 	if err != nil {
 		return nil, service.NewDBError(l, err)
 	}

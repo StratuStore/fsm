@@ -4,26 +4,22 @@ import (
 	"context"
 	"github.com/StratuStore/fsm/internal/fsm/service"
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/mbretter/go-mongodb/types"
 	"log/slog"
 )
 
 type Mover interface {
-	Move(ctx context.Context, dirID, fromID, toID string) error
+	Move(ctx context.Context, dirID, toID types.ObjectId) error
 }
 
 type MoveRequest struct {
-	ID   string `json:"id" validate:"required"`
-	From string `json:"from" validate:"required"`
-	To   string `json:"to" validate:"required"`
+	ID types.ObjectId `json:"id" validate:"required"`
+	To types.ObjectId `json:"to" validate:"required"`
 }
 
 func (s *Service) Move(ctx owncontext.Context, data MoveRequest) error {
 	l := s.l.With(slog.String("op", "Move"))
 
-	from, err := s.getAndCheckUser(ctx, data.From)
-	if err != nil {
-		return err
-	}
 	to, err := s.getAndCheckUser(ctx, data.To)
 	if err != nil {
 		return err
@@ -33,7 +29,7 @@ func (s *Service) Move(ctx owncontext.Context, data MoveRequest) error {
 		return err
 	}
 
-	err = s.s.Move(ctx, dir.ID, from.ID, to.ID)
+	err = s.s.Move(ctx, dir.ID, to.ID)
 	if err != nil {
 		return service.NewDBError(l, err)
 	}
