@@ -9,6 +9,12 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+type MongoDB struct {
+	MongoDSN             string `env:"MONGO_DSN"`
+	MongoDatabase        string `env:"MONGO_DATABASE"`
+	MaxConnectionRetries uint   `env:"MONGO_MAX_RETRIES"`
+}
+
 type Handler struct {
 	Host         string        `env:"HTTP_HOST" env-default:"0.0.0.0"`
 	Port         string        `env:"HTTP_PORT" env-default:"8080"`
@@ -22,6 +28,7 @@ type Logger struct {
 }
 
 type Config struct {
+	MongoDB
 	Logger
 	Handler
 	Env string `env:"ENV" env-default:"dev"`
