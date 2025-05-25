@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	ownerrors "github.com/StratuStore/fsm/internal/libs/errors"
+	"github.com/StratuStore/fsm/internal/libs/ownerrors"
 )
 
 func ProcessError(l *slog.Logger, c *fiber.Ctx, err error) error {

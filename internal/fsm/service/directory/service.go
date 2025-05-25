@@ -20,6 +20,14 @@ type Service struct {
 	c service.Communicator
 }
 
+func New(l *slog.Logger, s Storage, c service.Communicator) *Service {
+	return &Service{
+		l: l.With("module", "internal.fsm.service.directory.Service"),
+		s: s,
+		c: c,
+	}
+}
+
 func isErrNotFound(err error) bool {
 	return err != nil
 }

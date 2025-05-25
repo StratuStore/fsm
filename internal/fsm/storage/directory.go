@@ -15,6 +15,10 @@ type DirectoryStorage struct {
 	Storage
 }
 
+func NewDirectoryStorage(s *Storage) *DirectoryStorage {
+	return &DirectoryStorage{*s}
+}
+
 func (s *DirectoryStorage) Get(ctx context.Context, id types.ObjectId) (*core.Directory, error) {
 	db := s.db
 

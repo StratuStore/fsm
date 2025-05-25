@@ -5,6 +5,10 @@ import "context"
 type Communicator struct {
 }
 
+func New() *Communicator {
+	return &Communicator{}
+}
+
 func (c *Communicator) Delete(ctx context.Context, id string) error {
 	return nil
 }

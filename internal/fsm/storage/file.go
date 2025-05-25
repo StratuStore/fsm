@@ -15,6 +15,10 @@ type FileStorage struct {
 	Storage
 }
 
+func NewFileStorage(s *Storage) *FileStorage {
+	return &FileStorage{*s}
+}
+
 func (s *FileStorage) Get(ctx context.Context, id types.ObjectId) (*core.File, error) {
 	db := s.db
 
