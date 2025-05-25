@@ -14,10 +14,10 @@ type Deleter interface {
 }
 
 type DeleteRequest struct {
-	ID types.ObjectId `json:"id" validate:"required"`
+	ID types.ObjectId `params:"id" validate:"required"`
 }
 
-func (s *Service) Delete(ctx owncontext.Context, data DeleteRequest) error {
+func (s *Service) Delete(ctx owncontext.Context, data *DeleteRequest) error {
 	l := s.l.With(slog.String("op", "Delete"))
 
 	file, err := s.s.Get(ctx, data.ID)

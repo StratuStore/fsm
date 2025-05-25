@@ -19,11 +19,11 @@ type UpdateResponse struct {
 }
 
 type UpdateRequest struct {
-	ID   types.ObjectId `json:"id" validate:"required"`
-	Size uint           `json:"size" validate:"required"`
+	ID   types.ObjectId `params:"id" validate:"required"`
+	Size uint           `query:"size" validate:"required"`
 }
 
-func (s *Service) Update(ctx owncontext.Context, data UpdateRequest) (*UpdateResponse, error) {
+func (s *Service) Update(ctx owncontext.Context, data *UpdateRequest) (*UpdateResponse, error) {
 	l := s.l.With(slog.String("op", "Update"))
 
 	file, err := s.s.Get(ctx, data.ID)

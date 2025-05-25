@@ -13,11 +13,11 @@ type Sharer interface {
 }
 
 type PublicateRequest struct {
-	ID     types.ObjectId `json:"id" validate:"required"`
-	Public bool           `json:"public" validate:"-"`
+	ID     types.ObjectId `params:"id" validate:"required"`
+	Public bool           `query:"public" validate:"-"`
 }
 
-func (s *Service) Publicate(ctx owncontext.Context, data PublicateRequest) error {
+func (s *Service) Publicate(ctx owncontext.Context, data *PublicateRequest) error {
 	l := s.l.With(slog.String("op", "Publicate"))
 
 	file, err := s.s.Get(ctx, data.ID)

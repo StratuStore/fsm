@@ -29,7 +29,7 @@ type GetRequest struct {
 	SortOrder   int            `query:"sortOrder" validate:"-"`
 }
 
-func (s *Service) Get(ctx owncontext.Context, data GetRequest) (*core.Directory, error) {
+func (s *Service) Get(ctx owncontext.Context, data *GetRequest) (*core.Directory, error) {
 	l := s.l.With(slog.String("op", "Get"))
 
 	if data.Limit == 0 {

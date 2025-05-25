@@ -13,11 +13,11 @@ type Mover interface {
 }
 
 type MoveRequest struct {
-	ID types.ObjectId `json:"id" validate:"required"`
-	To types.ObjectId `json:"to" validate:"required"`
+	ID types.ObjectId `params:"id" validate:"required"`
+	To types.ObjectId `query:"to" validate:"required"`
 }
 
-func (s *Service) Move(ctx owncontext.Context, data MoveRequest) error {
+func (s *Service) Move(ctx owncontext.Context, data *MoveRequest) error {
 	l := s.l.With(slog.String("op", "Move"))
 
 	to, err := s.getAndCheckUser(ctx, data.To)

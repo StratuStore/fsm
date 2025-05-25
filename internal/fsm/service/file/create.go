@@ -27,7 +27,7 @@ type CreateRequest struct {
 	Size        uint           `json:"size" validate:"required"`
 }
 
-func (s *Service) Create(ctx owncontext.Context, data CreateRequest) (*Response, error) {
+func (s *Service) Create(ctx owncontext.Context, data *CreateRequest) (*Response, error) {
 	l := s.l.With(slog.String("op", "Create"))
 
 	file, err := s.s.Create(ctx, data.ParentDirID, ctx.UserID(), data.Name, data.Extension, data.Size)

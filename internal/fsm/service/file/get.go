@@ -18,7 +18,7 @@ type GetRequest struct {
 	ID types.ObjectId `params:"id" validate:"required"`
 }
 
-func (s *Service) Get(ctx owncontext.Context, data GetRequest) (*Response, error) {
+func (s *Service) Get(ctx owncontext.Context, data *GetRequest) (*Response, error) {
 	l := s.l.With(slog.String("op", "Get"))
 
 	file, err := s.getAndCheckUser(ctx, data.ID)

@@ -15,14 +15,14 @@ type Creator interface {
 }
 
 type CreateRequest struct {
-	ParentDirID types.ObjectId `json:"parentDirID" validate:"required"`
-	Name        string         `json:"name" validate:"required"`
+	ParentDirectoryID types.ObjectId `json:"parentDirectoryID" validate:"required"`
+	Name              string         `json:"name" validate:"required"`
 }
 
-func (s *Service) Create(ctx owncontext.Context, data CreateRequest) (*core.Directory, error) {
+func (s *Service) Create(ctx owncontext.Context, data *CreateRequest) (*core.Directory, error) {
 	l := s.l.With(slog.String("op", "Create"))
 
-	dir, err := s.s.Create(ctx, data.ParentDirID, ctx.UserID(), data.Name)
+	dir, err := s.s.Create(ctx, data.ParentDirectoryID, ctx.UserID(), data.Name)
 	if err != nil {
 		return nil, service.NewDBError(l, err)
 	}

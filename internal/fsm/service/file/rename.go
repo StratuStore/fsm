@@ -13,11 +13,11 @@ type Renamer interface {
 }
 
 type RenameRequest struct {
-	ID   types.ObjectId `json:"id" validate:"required"`
-	Name string         `json:"name" validate:"required"`
+	ID   types.ObjectId `params:"id" validate:"required"`
+	Name string         `query:"name" validate:"required"`
 }
 
-func (s *Service) Rename(ctx owncontext.Context, data RenameRequest) error {
+func (s *Service) Rename(ctx owncontext.Context, data *RenameRequest) error {
 	l := s.l.With(slog.String("op", "Rename"))
 
 	dir, err := s.getAndCheckUser(ctx, data.ID)

@@ -12,7 +12,7 @@ type Starer interface {
 	Star(ctx context.Context, id types.ObjectId) error
 }
 
-func (s *Service) Star(ctx owncontext.Context, data GetRequest) error {
+func (s *Service) Star(ctx owncontext.Context, data *GetRequest) error {
 	l := s.l.With(slog.String("op", "Star"))
 
 	file, err := s.s.Get(ctx, data.ID)

@@ -1,9 +1,7 @@
 package directory
 
 import (
-	"errors"
 	"github.com/StratuStore/fsm/internal/fsm/service"
-	"github.com/StratuStore/fsm/internal/fsm/storage"
 	"log/slog"
 )
 
@@ -23,5 +21,5 @@ type Service struct {
 }
 
 func isErrNotFound(err error) bool {
-	return errors.Is(err, storage.ErrNotFound)
+	return err != nil
 }

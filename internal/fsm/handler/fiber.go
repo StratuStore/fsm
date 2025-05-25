@@ -14,14 +14,18 @@ import (
 )
 
 type Handler struct {
-	app *fiber.App
-	l   *slog.Logger
-	cfg *config.Config
+	app              *fiber.App
+	l                *slog.Logger
+	cfg              *config.Config
+	fileHandler      *FileHandler
+	directoryHandler *DirectoryHandler
 }
 
 func New(
 	l *slog.Logger,
 	cfg *config.Config,
+	fileHandler *FileHandler,
+	directoryHandler *DirectoryHandler,
 ) *Handler {
 	h := &Handler{
 		app: fiber.New(fiber.Config{
@@ -29,8 +33,10 @@ func New(
 			ReadTimeout:  cfg.ReadTimeout,
 			WriteTimeout: cfg.WriteTimeout,
 		}),
-		l:   l.With(slog.String("module", "internal.fsm.handler")),
-		cfg: cfg,
+		l:                l.With(slog.String("module", "internal.fsm.handler")),
+		cfg:              cfg,
+		fileHandler:      fileHandler,
+		directoryHandler: directoryHandler,
 	}
 
 	h.Register()
@@ -41,6 +47,8 @@ func New(
 func (h *Handler) Register() {
 	h.registerDefaults()
 
+	h.fileHandler.Register(h.app, "/file")
+	h.directoryHandler.Register(h.app, "/directory")
 }
 
 func (h *Handler) registerDefaults() {
@@ -78,7 +86,7 @@ func (h *Handler) registerDefaults() {
 }
 
 func (h *Handler) Start(_ context.Context) error {
-	l := h.l.With("op", "internal.config-manager.handler.Start")
+	l := h.l.With("op", "internal.fsm.handler.Start")
 
 	addr := net.JoinHostPort(h.cfg.Handler.Host, h.cfg.Handler.Port)
 
