@@ -7,6 +7,7 @@ import (
 	"github.com/mbretter/go-mongodb/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 const DirectoryCollection = "directories"
@@ -63,6 +64,8 @@ func (s *DirectoryStorage) CreateRoot(ctx context.Context, userID string) (*core
 		UserID:           userID,
 		Path:             nil,
 		Name:             "root",
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 		Public:           false,
 		DirectoriesCount: 0,
 		Directories:      []core.Directory{},
@@ -102,6 +105,8 @@ func (s *DirectoryStorage) Create(ctx context.Context, parentDirID types.ObjectI
 		Path:              path,
 		ParentDirectoryID: string(parentDirID),
 		Name:              name,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 		Public:            false,
 		DirectoriesCount:  0,
 		Directories:       []core.Directory{},
@@ -170,9 +175,10 @@ func (s *DirectoryStorage) StupidDelete(ctx context.Context, id types.ObjectId) 
 
 func (s *DirectoryStorage) Rename(ctx context.Context, id types.ObjectId, newName string) error {
 	db := s.db
+	timestamp := time.Now()
 
 	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{"name", newName}}}}
+	update := bson.D{{"$set", bson.D{{"name", newName}, {"updatedAt", timestamp}}}}
 	_, err := db.Collection(DirectoryCollection).
 		UpdateOne(
 			ctx,
@@ -184,7 +190,7 @@ func (s *DirectoryStorage) Rename(ctx context.Context, id types.ObjectId, newNam
 	}
 
 	filter = bson.D{{"directories._id", id}}
-	update = bson.D{{"$set", bson.D{{"directories.$.name", newName}}}}
+	update = bson.D{{"$set", bson.D{{"directories.$.name", newName}, {"directories.$.updatedAt", timestamp}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -209,12 +215,14 @@ func (s *DirectoryStorage) Rename(ctx context.Context, id types.ObjectId, newNam
 
 func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	db := s.db
+	timestamp := time.Now()
 
 	dir, err := s.Get(ctx, id)
 	if err != nil {
 		return fmt.Errorf("unable to find dir: %w", err)
 	}
-	parentDir, err := s.Get(ctx, types.ObjectId(dir.ParentDirectoryID))
+	dir.UpdatedAt = timestamp
+	parentDir, err := s.Get(ctx, toID)
 	if err != nil {
 		return fmt.Errorf("unable to find parentDir: %w", err)
 	}
@@ -235,7 +243,7 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	path = append(path, core.PathElement{parentDir.ID, parentDir.Name})
 
 	filter = bson.D{{"_id", id}}
-	update = bson.D{{"$set", bson.D{{"parentDirectoryID", string(toID)}, {"path", path}}}}
+	update = bson.D{{"$set", bson.D{{"parentDirectoryID", string(toID)}, {"path", path}, {"updatedAt", timestamp}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -248,6 +256,8 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 
 	dir.Directories = nil
 	dir.Files = nil
+	dir.Path = path
+	dir.ParentDirectoryID = string(toID)
 	filter = bson.D{{"_id", toID}}
 	update = bson.D{{"$push", bson.D{{"directories", dir}}}, {"$inc", bson.D{{"directoriesCount", 1}}}}
 	_, err = db.Collection(DirectoryCollection).
@@ -266,9 +276,10 @@ func (s *DirectoryStorage) Share(ctx context.Context, id types.ObjectId, mode bo
 
 func (s *DirectoryStorage) UpdateField(ctx context.Context, id types.ObjectId, field string, value any) error {
 	db := s.db
+	timestamp := time.Now()
 
 	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{field, value}}}}
+	update := bson.D{{"$set", bson.D{{field, value}, {"updatedAt", timestamp}}}}
 	_, err := db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -280,7 +291,7 @@ func (s *DirectoryStorage) UpdateField(ctx context.Context, id types.ObjectId, f
 	}
 
 	filter = bson.D{{"directories._id", id}}
-	update = bson.D{{"$set", bson.D{{"directories.$." + field, value}}}}
+	update = bson.D{{"$set", bson.D{{"directories.$." + field, value}, {"directories.$.updatedAt", timestamp}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,

@@ -7,6 +7,7 @@ import (
 	"github.com/mbretter/go-mongodb/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 const FileCollection = "files"
@@ -39,6 +40,8 @@ func (s *FileStorage) Create(ctx context.Context, parentDirID types.ObjectId, us
 		UserID:            userID,
 		ParentDirectoryID: string(parentDirID),
 		Starred:           false,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 		Size:              size,
 		Public:            false,
 		Name:              name,
@@ -105,8 +108,10 @@ func (s *FileStorage) StupidDelete(ctx context.Context, id types.ObjectId) error
 func (s *FileStorage) Rename(ctx context.Context, id types.ObjectId, newName string) error {
 	db := s.db
 
+	timestamp := time.Now()
+
 	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{"name", newName}}}}
+	update := bson.D{{"$set", bson.D{{"name", newName}, {"updatedAt", timestamp}}}}
 	_, err := db.Collection(FileCollection).
 		UpdateOne(
 			ctx,
@@ -118,7 +123,7 @@ func (s *FileStorage) Rename(ctx context.Context, id types.ObjectId, newName str
 	}
 
 	filter = bson.D{{"files._id", id}}
-	update = bson.D{{"$set", bson.D{{"files.$.name", newName}}}}
+	update = bson.D{{"$set", bson.D{{"files.$.name", newName}, {"files.$.updatedAt", timestamp}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -136,6 +141,7 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to find file: %w", err)
 	}
+	file.UpdatedAt = time.Now()
 
 	filter := bson.D{{"_id", types.ObjectId(file.ParentDirectoryID)}}
 	update := bson.D{{"$pull", bson.D{{"files", bson.D{{"_id", id}}}}}, {"$inc", bson.D{{"filesCount", -1}}}}
@@ -150,7 +156,7 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	}
 
 	filter = bson.D{{"_id", id}}
-	update = bson.D{{"$set", bson.D{{"parentDirectoryID", string(toID)}}}}
+	update = bson.D{{"$set", bson.D{{"parentDirectoryID", string(toID)}, {"updatedAt", file.UpdatedAt}}}}
 	_, err = db.Collection(FileCollection).
 		UpdateMany(
 			ctx,
@@ -181,9 +187,10 @@ func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) 
 		return fmt.Errorf("unable to find file: %w", err)
 	}
 	diff := size - file.Size
+	file.UpdatedAt = time.Now()
 
 	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{"size", size}}}}
+	update := bson.D{{"$set", bson.D{{"size", size}, {"updatedAt", file.UpdatedAt}}}}
 	_, err = db.Collection(FileCollection).
 		UpdateMany(
 			ctx,
@@ -195,7 +202,7 @@ func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) 
 	}
 
 	filter = bson.D{{"files._id", id}}
-	update = bson.D{{"$set", bson.D{{"files.$.size", size}}}}
+	update = bson.D{{"$set", bson.D{{"files.$.size", size}, {"files.$.updatedAt", file.UpdatedAt}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -243,9 +250,10 @@ func (s *FileStorage) Share(ctx context.Context, id types.ObjectId, mode bool) e
 
 func (s *FileStorage) UpdateField(ctx context.Context, id types.ObjectId, field string, value any) error {
 	db := s.db
+	timestamp := time.Now()
 
 	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{field, value}}}}
+	update := bson.D{{"$set", bson.D{{field, value}, {"updatedAt", timestamp}}}}
 	_, err := db.Collection(FileCollection).
 		UpdateMany(
 			ctx,
@@ -257,7 +265,7 @@ func (s *FileStorage) UpdateField(ctx context.Context, id types.ObjectId, field 
 	}
 
 	filter = bson.D{{"files._id", id}}
-	update = bson.D{{"$set", bson.D{{"files.$." + field, value}}}}
+	update = bson.D{{"$set", bson.D{{"files.$." + field, value}, {"files.$.updatedAt", timestamp}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
