@@ -12,6 +12,8 @@ type Storage interface {
 	Renamer
 	Mover
 	Updater
+	Starer
+	Sharer
 }
 
 type Service struct {

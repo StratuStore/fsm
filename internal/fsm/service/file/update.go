@@ -26,9 +26,12 @@ type UpdateRequest struct {
 func (s *Service) Update(ctx owncontext.Context, data UpdateRequest) (*UpdateResponse, error) {
 	l := s.l.With(slog.String("op", "Update"))
 
-	file, err := s.getAndCheckUser(ctx, data.ID)
+	file, err := s.s.Get(ctx, data.ID)
 	if err != nil {
-		return nil, err
+		return nil, service.NewDBError(l, err)
+	}
+	if file.UserID != ctx.UserID() {
+		return nil, service.NewWrongUserError(l)
 	}
 
 	err = s.s.Update(ctx, data.ID, data.Size)

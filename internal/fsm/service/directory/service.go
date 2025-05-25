@@ -13,6 +13,7 @@ type Storage interface {
 	Deleter
 	Renamer
 	Mover
+	Sharer
 }
 
 type Service struct {
