@@ -13,12 +13,12 @@ type Storage struct {
 }
 
 func New(cfg *config.Config) *Storage {
-	client, err := openConnection(cfg.MongoDB.MongoDSN, cfg.MongoDB.MaxConnectionRetries)
+	client, err := openConnection(cfg.MongoDB.MongoConnectionString(), cfg.MongoDB.MongoMaxRetries)
 	if err != nil {
 		panic(err)
 	}
 
-	return &Storage{client.Database(cfg.MongoDB.MongoDatabase)}
+	return &Storage{client.Database(cfg.MongoDB.MongoDB)}
 }
 
 func openConnection(connectionString string, maxRetries uint) (*mongo.Client, error) {

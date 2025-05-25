@@ -10,9 +10,16 @@ import (
 )
 
 type MongoDB struct {
-	MongoDSN             string `env:"MONGO_DSN"`
-	MongoDatabase        string `env:"MONGO_DATABASE"`
-	MaxConnectionRetries uint   `env:"MONGO_MAX_RETRIES"`
+	MongoUser       string `env:"MONGO_USER" env-default:"root"`
+	MongoPass       string `env:"MONGO_PASS" env-default:"password"`
+	MongoHost       string `env:"MONGO_HOST" env-default:"localhost"`
+	MongoPort       string `env:"MONGO_PORT" env-default:"27017"`
+	MongoDB         string `env:"MONGO_DB" env-default:"auth"`
+	MongoMaxRetries uint   `env:"MONGO_MAX_RETRIES" env-default:"5"`
+}
+
+func (m *MongoDB) MongoConnectionString() string {
+	return fmt.Sprintf("mongodb://%v:%v@%v:%v", m.MongoUser, m.MongoPass, m.MongoHost, m.MongoPort)
 }
 
 type Handler struct {
