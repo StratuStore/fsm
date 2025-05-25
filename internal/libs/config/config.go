@@ -21,6 +21,8 @@ type Handler struct {
 	ReadTimeout  time.Duration `env:"HTTP_READ_TIMEOUT" env-default:"10s"`
 	WriteTimeout time.Duration `env:"HTTP_WRITE_TIMEOUT" env-default:"10s"`
 	IdleTimeout  time.Duration `env:"HTTP_IDLE_TIMEOUT" env-default:"10s"`
+	JWTSecret    string        `env:"JWT_SECRET"`
+	CORSOrigins  string        `env:"CORS_ORIGINS"`
 }
 
 type Logger struct {

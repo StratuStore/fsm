@@ -2,9 +2,11 @@ package handler
 
 import (
 	"github.com/StratuStore/fsm/internal/libs/owncontext"
+	"github.com/StratuStore/fsm/internal/libs/ownerrors"
 	"github.com/StratuStore/fsm/internal/libs/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"log/slog"
 	"net/http"
 )
@@ -66,8 +68,12 @@ func (h *Handler[T, V]) handleWithResult(c *fiber.Ctx) error {
 		return err
 	}
 
-	// TODO: auth
-	entity, err := h.serviceWithResult(owncontext.New(c.Context(), ""), data)
+	userID, err := getUserID(l, c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(utils.NewErrorResponse("authentification error"))
+	}
+
+	entity, err := h.serviceWithResult(owncontext.New(c.Context(), userID), data)
 	if err != nil {
 		return utils.ProcessError(l, c, err)
 	}
@@ -83,8 +89,12 @@ func (h *Handler[T, V]) handleWithoutResult(c *fiber.Ctx) error {
 		return err
 	}
 
-	// TODO: auth
-	err = h.serviceWithoutResult(owncontext.New(c.Context(), ""), data)
+	userID, err := getUserID(l, c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(utils.NewErrorResponse("authentification error"))
+	}
+
+	err = h.serviceWithoutResult(owncontext.New(c.Context(), userID), data)
 	if err != nil {
 		return utils.ProcessError(l, c, err)
 	}
@@ -108,4 +118,26 @@ func (h *Handler[T, V]) processData(l *slog.Logger, c *fiber.Ctx) (*T, error) {
 	}
 
 	return &data, nil
+}
+
+func getUserID(l *slog.Logger, c *fiber.Ctx) (string, error) {
+	user, ok := c.Locals("user").(*jwt.Token)
+	if !ok {
+		return "", ownerrors.NewUnauthorizedError(l, "unable to get user from context", "authentification error")
+	}
+	claims := user.Claims.(jwt.MapClaims)
+	id, ok := claims["id"]
+	if !ok {
+		return "", ownerrors.NewUnauthorizedError(l, "unable to get id from claims", "authentification error")
+	}
+	idStr, ok := id.(string)
+	if !ok {
+		return "", ownerrors.NewUnauthorizedError(l, "unable to convert id to string", "authentification error")
+	}
+	_, ok = claims["jti"]
+	if ok {
+		return "", ownerrors.NewUnauthorizedError(l, "got refreshToken instead of access", "authentification error")
+	}
+
+	return idStr, nil
 }
