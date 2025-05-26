@@ -40,7 +40,7 @@ func (s *DirectoryStorage) GetWithPagination(
 	sortByField string,
 	sortOrder int,
 ) (*core.Directory, error) {
-	filter := bson.M{"_id": id}
+	filter := bson.D{{"_id", id}}
 
 	return s.WithPagination(ctx, filter, offset, limit, sortByField, sortOrder)
 }
@@ -52,7 +52,7 @@ func (s *DirectoryStorage) GetRoot(
 	sortByField string,
 	sortOrder int,
 ) (*core.Directory, error) {
-	filter := bson.M{"userID": userID, "path": nil}
+	filter := bson.D{{"userID", userID}, {"path", nil}}
 
 	return s.WithPagination(ctx, filter, offset, limit, sortByField, sortOrder)
 }

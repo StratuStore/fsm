@@ -13,6 +13,7 @@ type Storage interface {
 	Mover
 	Sharer
 	Starer
+	Searcher
 }
 
 type Service struct {

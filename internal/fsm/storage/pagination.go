@@ -9,7 +9,7 @@ import (
 
 func (s *DirectoryStorage) WithPagination(
 	ctx context.Context,
-	filter bson.M,
+	filter bson.D,
 	offset, limit uint,
 	sortByField string,
 	sortOrder int,
