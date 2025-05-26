@@ -17,6 +17,7 @@ type DirectoryService interface {
 	Rename(ctx owncontext.Context, data *directory.RenameRequest) error
 	Move(ctx owncontext.Context, data *directory.MoveRequest) error
 	Publicate(ctx owncontext.Context, data *directory.PublicateRequest) error
+	Star(ctx owncontext.Context, data *directory.StarRequest) error
 }
 
 type DirectoryHandler struct {
@@ -42,4 +43,5 @@ func (h *DirectoryHandler) Register(app *fiber.App, subpath string) {
 	api.Delete("/:id", handler.NewWithoutResult(h.l, h.v, "Delete", handler.ParamsInput, h.service.Delete).Handler())
 	api.Patch("/:id/rename", handler.NewWithoutResult(h.l, h.v, "Rename", handler.ParamAndQueryInput, h.service.Rename).Handler())
 	api.Patch("/:id/share", handler.NewWithoutResult(h.l, h.v, "Publicate", handler.ParamAndQueryInput, h.service.Publicate).Handler())
+	api.Patch("/:id/star", handler.NewWithoutResult(h.l, h.v, "Star", handler.ParamsInput, h.service.Star).Handler())
 }

@@ -19,6 +19,7 @@ type Directory struct {
 	CreatedAt         time.Time      `json:"createdAt" bson:"createdAt,omitempty"`
 	UpdatedAt         time.Time      `json:"updatedAt" bson:"updatedAt,omitempty"`
 	Public            bool           `json:"public" bson:"public"`
+	Starred           bool           `json:"starred" bson:"starred"`
 	DirectoriesCount  uint           `json:"directoriesCount" bson:"directoriesCount"`
 	Directories       []Directory    `json:"directories" bson:"directories"`
 	FilesCount        uint           `json:"filesCount" bson:"filesCount"`
@@ -38,4 +39,11 @@ type File struct {
 	Name              string            `json:"name" bson:"name"`
 	Extension         string            `json:"extension" bson:"extension"`
 	Attrs             map[string]string `json:"attrs" bson:"attrs"`
+}
+
+type DirectoryLike struct {
+	DirectoriesCount uint        `json:"directoriesCount" bson:"directoriesCount"`
+	Directories      []Directory `json:"directories" bson:"directories"`
+	FilesCount       uint        `json:"filesCount" bson:"filesCount"`
+	Files            []File      `json:"files" bson:"files"`
 }

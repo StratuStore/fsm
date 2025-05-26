@@ -291,6 +291,15 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	return err
 }
 
+func (s *DirectoryStorage) Star(ctx context.Context, id types.ObjectId) error {
+	directory, err := s.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("unable to find directory: %w", err)
+	}
+
+	return s.UpdateField(ctx, id, "starred", !directory.Starred)
+}
+
 func (s *DirectoryStorage) Share(ctx context.Context, id types.ObjectId, mode bool) error {
 	return s.UpdateField(ctx, id, "public", mode)
 }
