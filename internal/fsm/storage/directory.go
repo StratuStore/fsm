@@ -173,7 +173,7 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 	}
 
 	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -dir.Size}}}}
+	update = bson.D{{"$inc", bson.D{{"size", -int(dir.Size)}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -254,7 +254,7 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	filter := bson.D{{"_id", types.ObjectId(dir.ParentDirectoryID)}}
 	update := bson.D{
 		{"$pull", bson.D{{"directories", bson.D{{"_id", id}}}}},
-		{"$inc", bson.D{{"directoriesCount", -1}, {"size", -dir.Size}}},
+		{"$inc", bson.D{{"directoriesCount", -1}, {"size", -int(dir.Size)}}},
 	}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateOne(
@@ -331,7 +331,7 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	}
 
 	filter = bson.D{{"_id", bson.D{{"$in", fromDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -dir.Size}}}}
+	update = bson.D{{"$inc", bson.D{{"size", -int(dir.Size)}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,

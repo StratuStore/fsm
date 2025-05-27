@@ -123,7 +123,7 @@ func (s *FileStorage) Delete(ctx context.Context, id types.ObjectId) error {
 	filter := bson.D{{"_id", types.ObjectId(file.ParentDirectoryID)}}
 	update := bson.D{
 		{"$pull", bson.D{{"files", bson.D{{"_id", id}}}}},
-		{"$inc", bson.D{{"filesCount", -1}, {"size", -file.Size}}},
+		{"$inc", bson.D{{"filesCount", -1}, {"size", -int(file.Size)}}},
 	}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateOne(
@@ -141,7 +141,7 @@ func (s *FileStorage) Delete(ctx context.Context, id types.ObjectId) error {
 	}
 
 	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -file.Size}}}}
+	update = bson.D{{"$inc", bson.D{{"size", -int(file.Size)}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -210,7 +210,7 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	filter := bson.D{{"_id", types.ObjectId(file.ParentDirectoryID)}}
 	update := bson.D{
 		{"$pull", bson.D{{"files", bson.D{{"_id", id}}}}},
-		{"$inc", bson.D{{"filesCount", -1}, {"size", -file.Size}}},
+		{"$inc", bson.D{{"filesCount", -1}, {"size", -int(file.Size)}}},
 	}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateOne(
@@ -256,7 +256,7 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	}
 
 	filter = bson.D{{"_id", bson.D{{"$in", fromDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -file.Size}}}}
+	update = bson.D{{"$inc", bson.D{{"size", -int(file.Size)}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -286,7 +286,7 @@ func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) 
 	if err != nil {
 		return fmt.Errorf("unable to find file: %w", err)
 	}
-	diff := size - file.Size
+	diff := int(size) - int(file.Size)
 	file.UpdatedAt = time.Now()
 	dir, err := s.GetDirectory(ctx, types.ObjectId(file.ParentDirectoryID))
 	if err != nil {
