@@ -54,6 +54,10 @@ func (s *DirectoryStorage) GetRoot(
 ) (*core.Directory, error) {
 	filter := bson.D{{"userID", userID}, {"path", nil}}
 
+	if err := s.db.Collection(DirectoryCollection).FindOne(ctx, filter).Err(); err != nil {
+		return nil, err
+	}
+
 	return s.WithPagination(ctx, filter, offset, limit, sortByField, sortOrder)
 }
 
