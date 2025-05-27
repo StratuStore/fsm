@@ -38,7 +38,7 @@ func NewDirectoryHandler(l *slog.Logger, v *validator.Validate, directoryService
 func (h *DirectoryHandler) Register(app *fiber.App, subpath string) {
 	api := app.Group(subpath)
 
-	api.Get("/:id", handler.NewWithResult(h.l, h.v, "Get", handler.ParamAndQueryInput, h.service.Get).Handler())
+	api.Get("/:id?", handler.NewWithResult(h.l, h.v, "Get", handler.ParamAndQueryInput, h.service.Get).Handler())
 	api.Get("/search", handler.NewWithResult(h.l, h.v, "Search", handler.QueryInput, h.service.Search).Handler())
 	api.Patch("/:id/move", handler.NewWithoutResult(h.l, h.v, "Move", handler.ParamAndQueryInput, h.service.Move).Handler())
 	api.Post("/", handler.NewWithResult(h.l, h.v, "Create", handler.BodyInput, h.service.Create).Handler())
