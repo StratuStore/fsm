@@ -29,6 +29,7 @@ func (s *DirectoryStorage) WithPagination(
 						"updatedAt":         1,
 						"public":            1,
 						"size":              1,
+						"starred":           1,
 						"directoriesCount":  1,
 						"filesCount":        1,
 					}},
@@ -79,6 +80,7 @@ func (s *DirectoryStorage) WithPagination(
 				"updatedAt":         bson.M{"$arrayElemAt": []interface{}{"$metadata.updatedAt", 0}},
 				"public":            bson.M{"$arrayElemAt": []interface{}{"$metadata.public", 0}},
 				"size":              bson.M{"$arrayElemAt": []interface{}{"$metadata.size", 0}},
+				"starred":           bson.M{"$arrayElemAt": []interface{}{"$metadata.starred", 0}},
 				"directoriesCount":  bson.M{"$arrayElemAt": []interface{}{"$metadata.directoriesCount", 0}},
 				"filesCount":        bson.M{"$arrayElemAt": []interface{}{"$metadata.filesCount", 0}},
 				"directories": bson.M{
