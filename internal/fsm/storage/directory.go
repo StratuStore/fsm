@@ -137,6 +137,8 @@ func (s *DirectoryStorage) Create(ctx context.Context, parentDirID types.ObjectI
 			filter,
 			update,
 		)
+	directory.Directories = []core.Directory{}
+	directory.Files = []core.File{}
 
 	return &directory, err
 }
