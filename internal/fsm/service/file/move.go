@@ -20,7 +20,7 @@ type MoveRequest struct {
 func (s *Service) Move(ctx owncontext.Context, data *MoveRequest) error {
 	l := s.l.With(slog.String("op", "Move"))
 
-	to, err := s.getAndCheckUser(ctx, data.To)
+	to, err := s.getAndCheckDirectory(ctx, data.To)
 	if err != nil {
 		return err
 	}

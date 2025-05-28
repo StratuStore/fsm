@@ -30,6 +30,11 @@ type CreateRequest struct {
 func (s *Service) Create(ctx owncontext.Context, data *CreateRequest) (*Response, error) {
 	l := s.l.With(slog.String("op", "Create"))
 
+	_, err := s.getAndCheckDirectory(ctx, data.ParentDirID)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := s.s.Create(ctx, data.ParentDirID, ctx.UserID(), data.Name, data.Extension, data.Size)
 	if err != nil {
 		return nil, service.NewDBError(l, err)
