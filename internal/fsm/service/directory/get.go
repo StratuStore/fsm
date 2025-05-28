@@ -80,3 +80,18 @@ func (s *Service) getAndCheckUser(ctx owncontext.Context, id types.ObjectId) (*c
 
 	return dir, nil
 }
+
+func (s *Service) getAndCheckOwner(ctx owncontext.Context, id types.ObjectId) (*core.Directory, error) {
+	l := s.l.With(slog.String("op", "getAndCheckUser"))
+
+	dir, err := s.s.Get(ctx, id)
+	if err != nil {
+		return nil, service.NewDBError(l, err)
+	}
+
+	if dir.UserID != ctx.UserID() {
+		return nil, service.NewWrongUserError(l)
+	}
+
+	return dir, nil
+}

@@ -20,11 +20,11 @@ type MoveRequest struct {
 func (s *Service) Move(ctx owncontext.Context, data *MoveRequest) error {
 	l := s.l.With(slog.String("op", "Move"))
 
-	to, err := s.getAndCheckUser(ctx, data.To)
+	to, err := s.getAndCheckOwner(ctx, data.To)
 	if err != nil {
 		return err
 	}
-	dir, err := s.getAndCheckUser(ctx, data.ID)
+	dir, err := s.getAndCheckOwner(ctx, data.ID)
 	if err != nil {
 		return err
 	}

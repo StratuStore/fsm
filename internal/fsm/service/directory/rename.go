@@ -20,7 +20,7 @@ type RenameRequest struct {
 func (s *Service) Rename(ctx owncontext.Context, data *RenameRequest) error {
 	l := s.l.With(slog.String("op", "Rename"))
 
-	dir, err := s.getAndCheckUser(ctx, data.ID)
+	dir, err := s.getAndCheckOwner(ctx, data.ID)
 	if err != nil {
 		return err
 	}

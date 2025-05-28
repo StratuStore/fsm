@@ -21,9 +21,13 @@ type GetRequest struct {
 func (s *Service) Get(ctx owncontext.Context, data *GetRequest) (*Response, error) {
 	l := s.l.With(slog.String("op", "Get"))
 
-	file, err := s.getAndCheckUser(ctx, data.ID)
+	file, err := s.s.Get(ctx, data.ID)
 	if err != nil {
-		return nil, err
+		return nil, service.NewDBError(l, err)
+	}
+
+	if file.UserID != ctx.UserID() && !file.Public {
+		return nil, service.NewWrongUserError(l)
 	}
 
 	host, connectionID, err := s.c.Open(ctx, string(file.ID))
@@ -46,7 +50,7 @@ func (s *Service) getAndCheckUser(ctx owncontext.Context, id types.ObjectId) (*c
 		return nil, service.NewDBError(l, err)
 	}
 
-	if file.UserID != ctx.UserID() && !file.Public {
+	if file.UserID != ctx.UserID() {
 		return nil, service.NewWrongUserError(l)
 	}
 
