@@ -245,6 +245,9 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 			filter,
 			update,
 		)
+	if err != nil {
+		return fmt.Errorf("unable to insert dir to toDir: %w", err)
+	}
 
 	fromDirIDs := make([]types.ObjectId, 0, len(fromDir.Path))
 	for _, d := range fromDir.Path {
