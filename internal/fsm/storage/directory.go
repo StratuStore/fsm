@@ -61,7 +61,13 @@ func (s *DirectoryStorage) GetRoot(
 	return s.WithPagination(ctx, filter, offset, limit, sortByField, sortOrder)
 }
 
-func (s *DirectoryStorage) CreateRoot(ctx context.Context, userID string) (*core.Directory, error) {
+func (s *DirectoryStorage) CreateRoot(
+	ctx context.Context,
+	userID string,
+	offset, limit uint,
+	sortByField string,
+	sortOrder int,
+) (*core.Directory, error) {
 	db := s.db
 
 	directory := core.Directory{
@@ -91,7 +97,9 @@ func (s *DirectoryStorage) CreateRoot(ctx context.Context, userID string) (*core
 
 	directory.ID = types.ObjectId(id.Hex())
 
-	return &directory, nil
+	filter := bson.D{{"userID", userID}, {"path", nil}}
+
+	return s.WithPagination(ctx, filter, offset, limit, sortByField, sortOrder)
 }
 
 func (s *DirectoryStorage) Create(ctx context.Context, parentDirID types.ObjectId, userID string, name string) (*core.Directory, error) {

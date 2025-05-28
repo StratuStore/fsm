@@ -11,7 +11,13 @@ import (
 
 type Creator interface {
 	Create(ctx context.Context, parentDirID types.ObjectId, userID, name string) (*core.Directory, error)
-	CreateRoot(ctx context.Context, userID string) (*core.Directory, error)
+	CreateRoot(
+		ctx context.Context,
+		userID string,
+		offset, limit uint,
+		sortByField string,
+		sortOrder int,
+	) (*core.Directory, error)
 }
 
 type CreateRequest struct {
@@ -30,10 +36,10 @@ func (s *Service) Create(ctx owncontext.Context, data *CreateRequest) (*core.Dir
 	return dir, nil
 }
 
-func (s *Service) initUser(ctx context.Context, userID string) (*core.Directory, error) {
+func (s *Service) initUser(ctx context.Context, userID string, offset, limit uint, sortByField string, sortOrder int) (*core.Directory, error) {
 	l := s.l.With(slog.String("op", "initUser"))
 
-	dir, err := s.s.CreateRoot(ctx, userID)
+	dir, err := s.s.CreateRoot(ctx, userID, offset, limit, sortByField, sortOrder)
 	if err != nil {
 		return nil, service.NewDBError(l, err)
 	}

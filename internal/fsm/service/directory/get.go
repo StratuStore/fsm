@@ -45,7 +45,7 @@ func (s *Service) Get(ctx owncontext.Context, data *GetRequest) (*core.Directory
 	if data.ID.IsZero() {
 		dir, err := s.s.GetRoot(ctx, ctx.UserID(), data.Offset, data.Limit, data.SortByField, data.SortOrder)
 		if isErrNotFound(err) {
-			dir, err = s.s.CreateRoot(ctx, ctx.UserID())
+			dir, err = s.s.CreateRoot(ctx, ctx.UserID(), data.Offset, data.Limit, data.SortByField, data.SortOrder)
 		}
 		if err != nil {
 			return nil, service.NewDBError(l, err)
