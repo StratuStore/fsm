@@ -88,11 +88,18 @@ func aggregationFilter(userID string, filter bson.D, name string, offset, limit 
 		}}})
 	}
 
-	result = append(result, []bson.D{{{"$facet", bson.D{
-		{name + "Count", bson.D{{"$count", name + "Count"}}},
-		{name, bson.D{{"$skip", offset}, {"$limit", limit}}},
-	}}},
-		{{"$sort", bson.D{{name, bson.D{{sortByField, sortOrder}}}}}},
+	result = append(result, []bson.D{
+		{{"$facet", bson.D{
+			{"result", []bson.D{{{name + "Count", bson.D{{"$count", name + "Count"}}}}}},
+			{name, []bson.D{
+				{{"$skip", offset}, {"$limit", limit}},
+				{{"$sort", bson.D{{sortByField, sortOrder}}}},
+			}},
+		}}},
+		{{"$project", bson.M{
+			name + "Count": bson.M{"$arrayElemAt": []interface{}{"$result." + name + "Count", 0}},
+			name:           1,
+		}}},
 	}...)
 
 	return result
