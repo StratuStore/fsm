@@ -34,14 +34,37 @@ func (f *Filter) ToMongoFilters() (directoriesFilter bson.D, filesFilter bson.D)
 		filesFilter = append(filesFilter, bson.E{"name", bson.D{{"$regex", ".*" + regexp.QuoteMeta(f.Name) + ".*"}}})
 	}
 
-	directoriesFilter = append(directoriesFilter,
-		bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}, {"$lte", f.CreatedAtTo}}},
-		bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
-	)
-	filesFilter = append(filesFilter,
-		bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}, {"$lte", f.CreatedAtTo}}},
-		bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
-	)
+	if !f.CreatedAtTo.IsZero() {
+		directoriesFilter = append(directoriesFilter,
+			bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}, {"$lte", f.CreatedAtTo}}},
+		)
+		filesFilter = append(filesFilter,
+			bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}, {"$lte", f.CreatedAtTo}}},
+		)
+	} else {
+		directoriesFilter = append(directoriesFilter,
+			bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}}},
+		)
+		filesFilter = append(filesFilter,
+			bson.E{"createdAt", bson.D{{"$gte", f.CreatedAtFrom}}},
+		)
+	}
+
+	if !f.UpdatedAtTo.IsZero() {
+		directoriesFilter = append(directoriesFilter,
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
+		)
+		filesFilter = append(filesFilter,
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
+		)
+	} else {
+		directoriesFilter = append(directoriesFilter,
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}}},
+		)
+		filesFilter = append(filesFilter,
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}}},
+		)
+	}
 
 	if f.Public != nil {
 		directoriesFilter = append(directoriesFilter, bson.E{"public", *f.Public})

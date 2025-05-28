@@ -309,7 +309,6 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	filter = bson.D{{"path._id", id}}
 	update = bson.D{
 		{"$pull", bson.D{{"path", bson.D{{"_id", bson.D{{"$in", oldPathIDs}}}}}}},
-		{"$push", bson.D{{"path", bson.D{{"$each", dir.Path}, {"$position", 0}}}}},
 	}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
@@ -319,6 +318,18 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 		)
 	if err != nil {
 		return fmt.Errorf("unable to update path: %w", err)
+	}
+	update = bson.D{
+		{"$push", bson.D{{"path", bson.D{{"$each", dir.Path}, {"$position", 0}}}}},
+	}
+	_, err = db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			filter,
+			update,
+		)
+	if err != nil {
+		return fmt.Errorf("unable to update path2: %w", err)
 	}
 
 	fromDirIDs := make([]types.ObjectId, 0, len(fromDir.Path))

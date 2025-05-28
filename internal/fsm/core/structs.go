@@ -7,7 +7,7 @@ import (
 
 type PathElement struct {
 	ID   types.ObjectId `bson:"_id" json:"id"`
-	Name string         `bson:"name"`
+	Name string         `bson:"name" json:"name"`
 }
 
 type Directory struct {
