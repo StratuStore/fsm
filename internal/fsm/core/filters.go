@@ -2,6 +2,7 @@ package core
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"regexp"
 	"time"
 )
 
@@ -29,8 +30,8 @@ type Filter struct {
 
 func (f *Filter) ToMongoFilters() (directoriesFilter bson.D, filesFilter bson.D) {
 	if f.Name != "" {
-		directoriesFilter = append(directoriesFilter, bson.E{"name", bson.D{{"$regex", ".*" + f.Name + ".*"}}})
-		filesFilter = append(filesFilter, bson.E{"name", bson.D{{"$regex", ".*" + f.Name + ".*"}}})
+		directoriesFilter = append(directoriesFilter, bson.E{"name", bson.D{{"$regex", ".*" + regexp.QuoteMeta(f.Name) + ".*"}}})
+		filesFilter = append(filesFilter, bson.E{"name", bson.D{{"$regex", ".*" + regexp.QuoteMeta(f.Name) + ".*"}}})
 	}
 
 	directoriesFilter = append(directoriesFilter,
