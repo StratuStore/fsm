@@ -164,7 +164,9 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 	}
 
 	filter := bson.D{{"_id", types.ObjectId(dir.ParentDirectoryID)}}
-	update := bson.D{{"$pull", bson.D{{"directories", bson.D{{"_id", id}}}}}, {"$inc", bson.D{{"directoriesCount", -1}}}}
+	update := bson.D{
+		{"$pull", bson.D{{"directories", bson.D{{"_id", id}}}}},
+		{"$inc", bson.D{{"directoriesCount", -1}, {"size", -int(dir.Size)}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateOne(
 			ctx,
