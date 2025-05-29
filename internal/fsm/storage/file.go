@@ -90,20 +90,13 @@ func (s *FileStorage) Create(ctx context.Context, parentDirID types.ObjectId, us
 	if err != nil {
 		return nil, fmt.Errorf("unable to insert file: %w", err)
 	}
-
-	dirIDs := make([]types.ObjectId, 0, len(dir.Path))
-	for _, d := range dir.Path {
-		dirIDs = append(dirIDs, d.ID)
+	if err := UpdateEmbeddedSize(db, ctx, parentDirID, int(size)); err != nil {
+		return nil, err
 	}
 
-	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", size}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
+	if err := IncrementSizes(db, ctx, dir.Path, int(size)); err != nil {
+		return nil, err
+	}
 
 	return &file, err
 }
@@ -134,20 +127,13 @@ func (s *FileStorage) Delete(ctx context.Context, id types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to delete file from parent: %w", err)
 	}
-
-	dirIDs := make([]types.ObjectId, 0, len(dir.Path))
-	for _, d := range dir.Path {
-		dirIDs = append(dirIDs, d.ID)
+	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(dir.ParentDirectoryID), -int(file.Size)); err != nil {
+		return err
 	}
 
-	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -int(file.Size)}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
+	if err := IncrementSizes(db, ctx, dir.Path, -int(file.Size)); err != nil {
+		return err
+	}
 
 	return s.StupidDelete(ctx, id)
 }
@@ -221,6 +207,9 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to delete dir from parent: %w", err)
 	}
+	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(file.ParentDirectoryID), -int(file.Size)); err != nil {
+		return err
+	}
 
 	filter = bson.D{{"_id", id}}
 	update = bson.D{{"$set", bson.D{{"parentDirectoryID", string(toID)}, {"updatedAt", file.UpdatedAt}}}}
@@ -248,38 +237,19 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to insert dir to toDir: %w", err)
 	}
-
-	fromDirIDs := make([]types.ObjectId, 0, len(fromDir.Path))
-	for _, d := range fromDir.Path {
-		fromDirIDs = append(fromDirIDs, d.ID)
-	}
-	toDirIDs := make([]types.ObjectId, 0, len(toDir.Path))
-	for _, d := range toDir.Path {
-		toDirIDs = append(toDirIDs, d.ID)
+	if err := UpdateEmbeddedSize(db, ctx, toID, int(file.Size)); err != nil {
+		return err
 	}
 
-	filter = bson.D{{"_id", bson.D{{"$in", fromDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -int(file.Size)}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
-	if err != nil {
-		return fmt.Errorf("unable to update directories sizes: %w", err)
+	if err := IncrementSizes(db, ctx, fromDir.Path, -int(file.Size)); err != nil {
+		return err
 	}
 
-	filter = bson.D{{"_id", bson.D{{"$in", toDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", file.Size}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
+	if err := IncrementSizes(db, ctx, toDir.Path, int(file.Size)); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) error {
@@ -309,7 +279,10 @@ func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) 
 	}
 
 	filter = bson.D{{"files._id", id}}
-	update = bson.D{{"$set", bson.D{{"files.$.size", size}, {"files.$.updatedAt", file.UpdatedAt}}}}
+	update = bson.D{
+		{"$set", bson.D{{"files.$.size", size}, {"files.$.updatedAt", file.UpdatedAt}}},
+		{"$inc", bson.D{{"size", diff}}},
+	}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateMany(
 			ctx,
@@ -319,20 +292,13 @@ func (s *FileStorage) Update(ctx context.Context, id types.ObjectId, size uint) 
 	if err != nil {
 		return fmt.Errorf("unable to update file size inside dir: %w", err)
 	}
-
-	dirIDs := make([]types.ObjectId, 0, len(dir.Path))
-	for _, d := range dir.Path {
-		dirIDs = append(dirIDs, d.ID)
+	if err := UpdateEmbeddedSize(db, ctx, dir.ID, diff); err != nil {
+		return err
 	}
 
-	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", diff}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
+	if err := IncrementSizes(db, ctx, dir.Path, diff); err != nil {
+		return err
+	}
 
 	return err
 }

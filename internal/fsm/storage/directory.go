@@ -175,19 +175,9 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 		return fmt.Errorf("unable to delete dir from parent: %w", err)
 	}
 
-	dirIDs := make([]types.ObjectId, 0, len(dir.Path))
-	for _, d := range dir.Path {
-		dirIDs = append(dirIDs, d.ID)
+	if err := IncrementSizes(db, ctx, dir.Path, -int(dir.Size)); err != nil {
+		return err
 	}
-
-	filter = bson.D{{"_id", bson.D{{"$in", dirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -int(dir.Size)}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
 
 	return s.StupidDelete(ctx, id)
 }
@@ -273,6 +263,9 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	if err != nil {
 		return fmt.Errorf("unable to delete dir from parent: %w", err)
 	}
+	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(dir.ParentDirectoryID), -int(dir.Size)); err != nil {
+		return err
+	}
 
 	path := toDir.Path
 	path = append(path, core.PathElement{toDir.ID, toDir.Name})
@@ -308,6 +301,9 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 	if err != nil {
 		return fmt.Errorf("unable to update toDir: %w", err)
 	}
+	if err := UpdateEmbeddedSize(db, ctx, toID, int(dir.Size)); err != nil {
+		return err
+	}
 
 	oldPathIDs := make([]types.ObjectId, len(oldPath))
 	for num, p := range oldPath {
@@ -340,35 +336,12 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 		return fmt.Errorf("unable to update path2: %w", err)
 	}
 
-	fromDirIDs := make([]types.ObjectId, 0, len(fromDir.Path))
-	for _, d := range fromDir.Path {
-		fromDirIDs = append(fromDirIDs, d.ID)
+	if err := IncrementSizes(db, ctx, fromDir.Path, -int(dir.Size)); err != nil {
+		return err
 	}
-	toDirIDs := make([]types.ObjectId, 0, len(toDir.Path))
-	for _, d := range toDir.Path {
-		toDirIDs = append(toDirIDs, d.ID)
+	if err := IncrementSizes(db, ctx, toDir.Path, int(dir.Size)); err != nil {
+		return err
 	}
-
-	filter = bson.D{{"_id", bson.D{{"$in", fromDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", -int(dir.Size)}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
-	if err != nil {
-		return fmt.Errorf("unable to update directories sizes: %w", err)
-	}
-
-	filter = bson.D{{"_id", bson.D{{"$in", toDirIDs}}}}
-	update = bson.D{{"$inc", bson.D{{"size", dir.Size}}}}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
 
 	return err
 }
