@@ -222,6 +222,7 @@ func (s *FileStorage) Move(ctx context.Context, id, toID types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to update file parentID: %w", err)
 	}
+	file.ParentDirectoryID = string(toID)
 
 	filter = bson.D{{"_id", toID}}
 	update = bson.D{
