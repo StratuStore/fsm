@@ -7,6 +7,8 @@ import (
 	"github.com/mbretter/go-mongodb/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"slices"
 	"time"
 )
 
@@ -109,7 +111,7 @@ func (s *DirectoryStorage) Create(ctx context.Context, parentDirID types.ObjectI
 	if err != nil {
 		return nil, fmt.Errorf("unable to find parentDir: %w", err)
 	}
-	path := parentDir.Path
+	path := slices.Clone(parentDir.Path)
 	path = append(path, core.PathElement{parentDirID, parentDir.Name})
 
 	directory := core.Directory{
@@ -176,6 +178,9 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 	if err != nil {
 		return fmt.Errorf("unable to delete dir from parent: %w", err)
 	}
+	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(dir.ParentDirectoryID), -int(dir.Size)); err != nil {
+		return err
+	}
 
 	if err := IncrementSizes(db, ctx, dir.Path, -int(dir.Size)); err != nil {
 		return err
@@ -230,6 +235,16 @@ func (s *DirectoryStorage) Rename(ctx context.Context, id types.ObjectId, newNam
 			update,
 		)
 
+	arrayFilter := []any{bson.D{{"num._id", id}}}
+	update = bson.D{{"$set", bson.D{{"directories.$[].path.$[num].name", newName}}}}
+	_, err = db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			bson.D{},
+			update,
+			options.Update().SetArrayFilters(options.ArrayFilters{Filters: arrayFilter}),
+		)
+
 	return err
 }
 
@@ -269,7 +284,7 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 		return err
 	}
 
-	path := toDir.Path
+	path := slices.Clone(toDir.Path)
 	path = append(path, core.PathElement{toDir.ID, toDir.Name})
 
 	filter = bson.D{{"_id", id}}
@@ -284,7 +299,7 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 		return fmt.Errorf("unable to update dir parentID: %w", err)
 	}
 
-	oldPath := dir.Path
+	oldPath := slices.Clone(dir.Path)
 	dir.Directories = nil
 	dir.Files = nil
 	dir.Path = path
@@ -307,35 +322,8 @@ func (s *DirectoryStorage) Move(ctx context.Context, id, toID types.ObjectId) er
 		return err
 	}
 
-	oldPathIDs := make([]types.ObjectId, len(oldPath))
-	for num, p := range oldPath {
-		oldPathIDs[num] = p.ID
-	}
-
-	filter = bson.D{{"path._id", id}}
-	update = bson.D{
-		{"$pull", bson.D{{"path", bson.D{{"_id", bson.D{{"$in", oldPathIDs}}}}}}},
-	}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
-	if err != nil {
-		return fmt.Errorf("unable to update path: %w", err)
-	}
-	update = bson.D{
-		{"$push", bson.D{{"path", bson.D{{"$each", dir.Path}, {"$position", 0}}}}},
-	}
-	_, err = db.Collection(DirectoryCollection).
-		UpdateMany(
-			ctx,
-			filter,
-			update,
-		)
-	if err != nil {
-		return fmt.Errorf("unable to update path2: %w", err)
+	if err := s.UpdatePath(ctx, id, oldPath, dir.Path); err != nil {
+		return err
 	}
 
 	if err := IncrementSizes(db, ctx, fromDir.Path, -int(dir.Size)); err != nil {
@@ -390,4 +378,70 @@ func (s *DirectoryStorage) UpdateField(ctx context.Context, id types.ObjectId, f
 	}
 
 	return err
+}
+
+func (s *DirectoryStorage) UpdatePath(ctx context.Context, id types.ObjectId, oldPath []core.PathElement, newPath []core.PathElement) error {
+	db := s.db
+
+	oldPathIDs := make([]types.ObjectId, len(oldPath))
+	for num, p := range oldPath {
+		oldPathIDs[num] = p.ID
+	}
+
+	filter := bson.D{{"path._id", id}}
+	update := bson.D{
+		{"$pull", bson.D{{"path", bson.D{{"_id", bson.D{{"$in", oldPathIDs}}}}}}},
+	}
+	_, err := db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			filter,
+			update,
+		)
+	if err != nil {
+		return fmt.Errorf("unable to update path: %w", err)
+	}
+	update = bson.D{
+		{"$push", bson.D{{"path", bson.D{{"$each", newPath}, {"$position", 0}}}}},
+	}
+	_, err = db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			filter,
+			update,
+		)
+	if err != nil {
+		return fmt.Errorf("unable to update path2: %w", err)
+	}
+
+	arrayFilter := []any{bson.D{{"num.path", bson.D{{"$elemMatch", bson.D{{"_id", id}}}}}}}
+	filter = bson.D{}
+	update = bson.D{
+		{"$pull", bson.D{{"directories.$[num].path", bson.D{{"_id", bson.D{{"$in", oldPathIDs}}}}}}},
+	}
+	_, err = db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			filter,
+			update,
+			options.Update().SetArrayFilters(options.ArrayFilters{Filters: arrayFilter}),
+		)
+	if err != nil {
+		return fmt.Errorf("unable to update embedded path: %w", err)
+	}
+	update = bson.D{
+		{"$push", bson.D{{"directories.$[num].path", bson.D{{"$each", newPath}, {"$position", 0}}}}},
+	}
+	_, err = db.Collection(DirectoryCollection).
+		UpdateMany(
+			ctx,
+			filter,
+			update,
+			options.Update().SetArrayFilters(options.ArrayFilters{Filters: arrayFilter}),
+		)
+	if err != nil {
+		return fmt.Errorf("unable to update embedded path2: %w", err)
+	}
+
+	return nil
 }
