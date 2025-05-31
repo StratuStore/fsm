@@ -9,6 +9,12 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+type RabbitMQ struct {
+	Host  string `env:"FOR_RABBIT_HOST"`
+	URN   string `env:"RABBIT_URN"`
+	Topic string `env:"RABBIT_TOPIC"`
+}
+
 type MongoDB struct {
 	MongoUser       string `env:"MONGO_USER" env-default:"root"`
 	MongoPass       string `env:"MONGO_PASS" env-default:"password"`
@@ -37,6 +43,7 @@ type Logger struct {
 }
 
 type Config struct {
+	RabbitMQ
 	MongoDB
 	Logger
 	Handler

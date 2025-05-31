@@ -29,7 +29,7 @@ func CreateApp(cfg *config.Config) fx.Option {
 			fx.Annotate(storage.NewFileStorage, fx.As(new(file.Storage))),
 
 			// * Services
-			fx.Annotate(communicator.New, fx.As(new(service.Communicator))),
+			fx.Annotate(communicator.New, fx.As(new(service.Communicator)), fx.As(fx.Self())),
 			fx.Annotate(directory.New, fx.As(new(handler.DirectoryService))),
 			fx.Annotate(file.New, fx.As(new(handler.FileService))),
 

@@ -7,6 +7,12 @@ services:
       - ./.env
     ports:
       - "$HTTP_PORT:$HTTP_PORT"
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbit:
+        condition: service_healthy
+
 
   mongo:
     image: mongo
@@ -17,3 +23,20 @@ services:
       MONGO_INITDB_ROOT_USERNAME: "$MONGO_USER"
       MONGO_INITDB_ROOT_PASSWORD: "$MONGO_PASS"
       MONGO_INITDB_DATABASE: "$MONGO_DB"
+
+  rabbit:
+    image: rabbitmq:management-alpine
+    hostname: rabbit
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: "$RABBIT_USER"
+      RABBITMQ_DEFAULT_PASS: "$RABBIT_PASS"
+      RABBITMQ_DEFAULT_VHOST: "$RABBIT_VHOST"
+    ports:
+      - 15672:15672
+      - 5672:5672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 3s
+      timeout: 10s
+      retries: 10

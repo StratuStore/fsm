@@ -10,5 +10,9 @@ func NewWrongUserError(l *slog.Logger, errs ...error) error {
 }
 
 func NewDBError(l *slog.Logger, err error) error {
-	return err
+	if err != nil {
+		return ownerrors.NewNotFoundError(l, "db error", "not found", err)
+	}
+
+	return nil
 }

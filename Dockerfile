@@ -25,6 +25,4 @@ USER appuser
 
 COPY --from=build /bin/service /bin/
 
-EXPOSE 8080
-
-CMD "/bin/service"
+ENTRYPOINT ["sh", "-c", "sleep 5 && /bin/service"]

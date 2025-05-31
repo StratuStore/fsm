@@ -31,7 +31,7 @@ func (s *Service) Get(ctx owncontext.Context, data *GetRequest) (*Response, erro
 		return nil, service.NewWrongUserError(l)
 	}
 
-	host, connectionID, err := s.c.Open(ctx, string(file.ID))
+	host, connectionID, err := s.c.Open(ctx, file.ID)
 	if err != nil {
 		return nil, ownerrors.NewInternalError(l, "unable to communicate with FS", err)
 	}

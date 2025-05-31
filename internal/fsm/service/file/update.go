@@ -39,7 +39,7 @@ func (s *Service) Update(ctx owncontext.Context, data *UpdateRequest) (*UpdateRe
 		return nil, service.NewDBError(l, err)
 	}
 
-	host, connectionID, err := s.c.Update(ctx, string(file.ID))
+	host, connectionID, err := s.c.Update(ctx, file.ID, data.Size)
 	if err != nil {
 		return nil, ownerrors.NewInternalError(l, "unable to communicate with FS", err)
 	}

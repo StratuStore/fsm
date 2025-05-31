@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/StratuStore/fsm/internal/fsm/communicator"
 	"github.com/StratuStore/fsm/internal/libs/config"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,6 +20,7 @@ type Handler struct {
 	cfg              *config.Config
 	fileHandler      *FileHandler
 	directoryHandler *DirectoryHandler
+	comm             *communicator.Communicator
 }
 
 func New(
@@ -26,6 +28,7 @@ func New(
 	cfg *config.Config,
 	fileHandler *FileHandler,
 	directoryHandler *DirectoryHandler,
+	comm *communicator.Communicator,
 ) *Handler {
 	h := &Handler{
 		app: fiber.New(fiber.Config{
@@ -37,6 +40,7 @@ func New(
 		cfg:              cfg,
 		fileHandler:      fileHandler,
 		directoryHandler: directoryHandler,
+		comm:             comm,
 	}
 
 	h.Register()
@@ -49,6 +53,7 @@ func (h *Handler) Register() {
 
 	h.fileHandler.Register(h.app, "/file")
 	h.directoryHandler.Register(h.app, "/directory")
+	h.app.Post("/communicate", h.comm.Handler)
 }
 
 func (h *Handler) registerDefaults() {

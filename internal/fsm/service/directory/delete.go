@@ -69,7 +69,7 @@ func (s *Service) deleteDir(ctx context.Context, dirs []core.Directory, files []
 		errors.Join(errs, s.s.StupidDelete(ctx, dir.ID))
 	}
 	for _, file := range files {
-		errors.Join(errs, s.c.Delete(ctx, string(file.ID)))
+		errors.Join(errs, s.c.Delete(ctx, file.ID))
 	}
 	if errs != nil {
 		return service.NewDBError(l, errs)

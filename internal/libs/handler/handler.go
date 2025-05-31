@@ -68,7 +68,7 @@ func (h *Handler[T, V]) handleWithResult(c *fiber.Ctx) error {
 		return err
 	}
 
-	userID, err := getUserID(l, c)
+	userID, err := GetUserID(l, c)
 	if err != nil {
 		return c.Status(http.StatusUnauthorized).JSON(utils.NewErrorResponse("authentification error"))
 	}
@@ -89,7 +89,7 @@ func (h *Handler[T, V]) handleWithoutResult(c *fiber.Ctx) error {
 		return err
 	}
 
-	userID, err := getUserID(l, c)
+	userID, err := GetUserID(l, c)
 	if err != nil {
 		return c.Status(http.StatusUnauthorized).JSON(utils.NewErrorResponse("authentification error"))
 	}
@@ -120,7 +120,7 @@ func (h *Handler[T, V]) processData(l *slog.Logger, c *fiber.Ctx) (*T, error) {
 	return &data, nil
 }
 
-func getUserID(l *slog.Logger, c *fiber.Ctx) (string, error) {
+func GetUserID(l *slog.Logger, c *fiber.Ctx) (string, error) {
 	user, ok := c.Locals("user").(*jwt.Token)
 	if !ok {
 		return "", ownerrors.NewUnauthorizedError(l, "unable to get user from context", "authentification error")

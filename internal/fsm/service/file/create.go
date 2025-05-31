@@ -40,7 +40,7 @@ func (s *Service) Create(ctx owncontext.Context, data *CreateRequest) (*Response
 		return nil, service.NewDBError(l, err)
 	}
 
-	host, connectionID, err := s.c.Create(ctx, string(file.ID))
+	host, connectionID, err := s.c.Create(ctx, file.ID, data.Size)
 	if err != nil {
 		return nil, ownerrors.NewInternalError(l, "unable to communicate with FS", err)
 	}

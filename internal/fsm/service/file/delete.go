@@ -35,7 +35,7 @@ func (s *Service) Delete(ctx owncontext.Context, data *DeleteRequest) error {
 	}
 
 	go func() {
-		err := s.c.Delete(context.Background(), string(file.ID))
+		err := s.c.Delete(context.Background(), file.ID)
 		if err != nil {
 			l.Error("unable to delete file in the background", slog.String("err", err.Error()))
 		}
