@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/StratuStore/fsm/internal/libs/errors"
+	"github.com/StratuStore/fsm/internal/libs/ownerrors"
 )
 
 type Response[T any] struct {
@@ -9,7 +9,7 @@ type Response[T any] struct {
 	Body  T      `json:"body,omitempty"`
 }
 
-func NewResponseByUserError(err errors.UserError) *Response[any] {
+func NewResponseByUserError(err ownerrors.UserError) *Response[any] {
 	return &Response[any]{
 		Error: err.UserMessage(),
 	}
