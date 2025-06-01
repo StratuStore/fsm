@@ -61,7 +61,7 @@ func (c *Communicator) Handler(ctx *fiber.Ctx) error {
 
 	process, ok := c.m.Load(r.ID)
 	if !ok {
-		return ownerrors.NewValidationError(l, "requestID is not found", "wrong requestID")
+		return ctx.SendStatus(http.StatusResetContent)
 	}
 	p := process.(*Process)
 
@@ -159,6 +159,8 @@ func (c *Communicator) makeRequest(ctx context.Context, r *Request) (*Response, 
 
 		return nil, err
 	}
+
+	c.m.Delete(r.ID)
 
 	return response, nil
 }
