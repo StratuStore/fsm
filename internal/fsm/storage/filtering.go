@@ -68,6 +68,10 @@ func (s *DirectoryStorage) GetGlobalWithPaginationAndFiltering(
 }
 
 func aggregationFilter(userID string, filter bson.D, name string, offset, limit uint, sortByField string, sortOrder int) []bson.D {
+	if name == DirectoryCollection {
+		filter = append(filter, bson.E{"name", bson.M{"$ne": "root"}})
+	}
+
 	filter = append(filter, bson.E{"userID", userID})
 	result := []bson.D{
 		{{"$match", filter}},
