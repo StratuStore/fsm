@@ -52,17 +52,17 @@ func (f *Filter) ToMongoFilters() (directoriesFilter bson.D, filesFilter bson.D)
 
 	if !f.UpdatedAtTo.IsZero() {
 		directoriesFilter = append(directoriesFilter,
-			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtFrom}, {"$lte", f.UpdatedAtTo}}},
 		)
 		filesFilter = append(filesFilter,
-			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}, {"$lte", f.UpdatedAtTo}}},
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtFrom}, {"$lte", f.UpdatedAtTo}}},
 		)
 	} else {
 		directoriesFilter = append(directoriesFilter,
-			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}}},
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtFrom}}},
 		)
 		filesFilter = append(filesFilter,
-			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtTo}}},
+			bson.E{"updatedAt", bson.D{{"$gte", f.UpdatedAtFrom}}},
 		)
 	}
 
