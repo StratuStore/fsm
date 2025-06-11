@@ -195,7 +195,7 @@ func (s *DirectoryStorage) StupidDelete(ctx context.Context, id types.ObjectId) 
 	return err
 }
 
-func (s *FileStorage) StupidDeleteFile(ctx context.Context, id types.ObjectId) error {
+func (s *DirectoryStorage) StupidDeleteFile(ctx context.Context, id types.ObjectId) error {
 	db := s.db
 
 	filter := bson.D{{"_id", id}}
