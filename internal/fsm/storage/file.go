@@ -127,7 +127,7 @@ func (s *FileStorage) Delete(ctx context.Context, id types.ObjectId) error {
 	if err != nil {
 		return fmt.Errorf("unable to delete file from parent: %w", err)
 	}
-	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(dir.ParentDirectoryID), -int(file.Size)); err != nil {
+	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(file.ParentDirectoryID), -int(file.Size)); err != nil {
 		return err
 	}
 
