@@ -14,6 +14,7 @@ import (
 type Deleter interface {
 	Delete(ctx context.Context, id types.ObjectId) error
 	StupidDelete(ctx context.Context, id types.ObjectId) error
+	StupidDeleteFile(ctx context.Context, id types.ObjectId) error
 }
 
 type DeleteRequest struct {
@@ -69,6 +70,7 @@ func (s *Service) deleteDir(ctx context.Context, dirs []core.Directory, files []
 		errors.Join(errs, s.s.StupidDelete(ctx, dir.ID))
 	}
 	for _, file := range files {
+		errors.Join(errs, s.s.StupidDeleteFile(ctx, file.ID))
 		errors.Join(errs, s.c.Delete(ctx, file.ID))
 	}
 	if errs != nil {

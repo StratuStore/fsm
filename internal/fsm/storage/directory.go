@@ -168,7 +168,7 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 	filter := bson.D{{"_id", types.ObjectId(dir.ParentDirectoryID)}}
 	update := bson.D{
 		{"$pull", bson.D{{"directories", bson.D{{"_id", id}}}}},
-		{"$inc", bson.D{{"directoriesCount", -1}, {"size", -int(dir.Size)}}}}
+		{"$inc", bson.D{{"directoriesCount", -1}}}}
 	_, err = db.Collection(DirectoryCollection).
 		UpdateOne(
 			ctx,
@@ -177,9 +177,6 @@ func (s *DirectoryStorage) Delete(ctx context.Context, id types.ObjectId) error 
 		)
 	if err != nil {
 		return fmt.Errorf("unable to delete dir from parent: %w", err)
-	}
-	if err := UpdateEmbeddedSize(db, ctx, types.ObjectId(dir.ParentDirectoryID), -int(dir.Size)); err != nil {
-		return err
 	}
 
 	if err := IncrementSizes(db, ctx, dir.Path, -int(dir.Size)); err != nil {
@@ -194,6 +191,15 @@ func (s *DirectoryStorage) StupidDelete(ctx context.Context, id types.ObjectId) 
 
 	filter := bson.D{{"_id", id}}
 	_, err := db.Collection(DirectoryCollection).DeleteOne(ctx, filter)
+
+	return err
+}
+
+func (s *FileStorage) StupidDeleteFile(ctx context.Context, id types.ObjectId) error {
+	db := s.db
+
+	filter := bson.D{{"_id", id}}
+	_, err := db.Collection(FileCollection).DeleteOne(ctx, filter)
 
 	return err
 }
