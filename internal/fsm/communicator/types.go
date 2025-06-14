@@ -33,7 +33,7 @@ func NewRequest(requestType RequestType, host string, fileID types.ObjectId, siz
 
 	var fileUUID uuid.UUID
 	copy(fileUUID[:6], objID[:6])
-	copy(fileUUID[10:], objID[10:])
+	copy(fileUUID[10:], objID[6:])
 	fileUUID[6] &= 0x0f /* clear version        */
 	fileUUID[6] |= 0x40 /* set to version 4     */
 	fileUUID[8] &= 0x3f /* clear variant        */
