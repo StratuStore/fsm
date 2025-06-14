@@ -8,6 +8,8 @@ import (
 	"log/slog"
 )
 
+const serviceAccountID = "fs"
+
 type Deleter interface {
 	Delete(ctx context.Context, id types.ObjectId) error
 	StupidDelete(ctx context.Context, id types.ObjectId) error
@@ -25,7 +27,7 @@ func (s *Service) Delete(ctx owncontext.Context, data *DeleteRequest) error {
 		return service.NewDBError(l, err)
 	}
 
-	if file.UserID != ctx.UserID() {
+	if file.UserID != ctx.UserID() && ctx.UserID() != serviceAccountID {
 		return service.NewWrongUserError(l)
 	}
 
@@ -34,12 +36,14 @@ func (s *Service) Delete(ctx owncontext.Context, data *DeleteRequest) error {
 		return service.NewDBError(l, err)
 	}
 
-	go func() {
-		err := s.c.Delete(context.Background(), file.ID)
-		if err != nil {
-			l.Error("unable to delete file in the background", slog.String("err", err.Error()))
-		}
-	}()
+	if ctx.UserID() != serviceAccountID {
+		go func() {
+			err := s.c.Delete(context.Background(), file.ID)
+			if err != nil {
+				l.Error("unable to delete file in the background", slog.String("err", err.Error()))
+			}
+		}()
+	}
 
 	return nil
 }
